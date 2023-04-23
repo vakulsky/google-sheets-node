@@ -1,23 +1,33 @@
-const {GoogleSpreadsheet} = require('google-spreadsheet');
+const express = require('express');
+
 const dotenv = require('dotenv');
+dotenv.config();
 
-async function getSpreadsheetData(doc_id, sheet_index, cellsRange, cells) {
-    const doc = new GoogleSpreadsheet(doc_id);
-    await doc.useServiceAccountAuth({
-        client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
-        private_key: process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, "\n"),
-    });
-    const info = await doc.loadInfo();
-    const sheet = doc.sheetsByIndex[sheet_index];
-    await sheet.loadCells(cellsRange);
+const router = express.Router();
+const { getSpreadsheetData } = require('./spreadsheetConnect.js');
 
-    var cellsData = [];
-    for(const cellPosition of cells){
-        const cell = await sheet.getCellByA1(cellPosition);
-        cellsData.push(cell.value);
+//Process request
+router.post('/', async (req, res) => {
+  try{
+    const token = req.body.token;
+    const doc_id = req.body.doc_id;
+    const sheet_index = req.body.sheet_index;
+    const cellsRange = req.body.cells_range;
+    const cells = req.body.cells;
+
+    console.log(process.env.TOKEN);
+
+    if (token != process.env.TOKEN) {
+      return res.status(403).send('Invalid token');
     }
 
-    return cellsData;
-}
+    const data = await getSpreadsheetData(doc_id, sheet_index, cellsRange, cells);
+    res.status(200).json(data);
+  }
+  catch (error) {
+    console.error(error);
+    return res.status(500).send("Server error");
+  }
+});
 
-module.exports = { getSpreadsheetData };
+module.exports = router;

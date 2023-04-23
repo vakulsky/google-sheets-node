@@ -15,7 +15,7 @@ GOOGLE_PRIVATE_KEY=
 5. `npm run start`
 
 ## Использование
-`GET` запрос к `/spreadsheet` со следующим body:
+`POST` запрос к `/spreadsheet` со следующим body:
 ```json
     {
     "token": "", //token==TOKEN из .env
